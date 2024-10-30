@@ -1,0 +1,71 @@
+#include <CheapStepper.h>
+#include <Servo.h>
+
+Servo servo1;
+#define ir 5
+#define proxi 6
+#define rainSensor A1 // New rain sensor pin
+
+CheapStepper stepper(8, 9, 10, 11);
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(proxi, INPUT_PULLUP);  // Inductive sensor setup
+  pinMode(ir, INPUT);
+  pinMode(rainSensor, INPUT);     // Rain sensor setup
+  servo1.attach(7);
+  stepper.setRpm(17);
+
+  // Initial servo position
+  servo1.write(180);
+  delay(1000);
+  servo1.write(70);
+  delay(1000);
+}
+
+void loop() 
+{
+  int L = digitalRead(proxi);
+  int rain = digitalRead(rainSensor);
+  
+  Serial.print("Metal detection sensor: ");
+  Serial.println(L);
+  
+  Serial.print("Rain sensor: ");
+  Serial.println(rain);
+
+  if (rain == LOW) // Rain detected
+  {
+    Serial.println("Rain detected! System actions halted.");
+    // Additional actions on rain detection can be added here
+    delay(1000); // Delay for stability, add custom action if needed
+  }
+  else if (L == 0) // Triggered by metal presence
+  {
+    // Move stepper motor clockwise and reset servo position
+    stepper.moveDegreesCW(240);
+    delay(1000);
+    servo1.write(180);
+    delay(1000);
+    servo1.write(70);
+    delay(1000);
+    stepper.moveDegreesCCW(240);
+    delay(1000);
+  }
+
+  if (digitalRead(ir) == 0)
+  {
+    Serial.println("IR sensor triggered");
+
+    // Move stepper motor and reset servo based on IR sensor
+    stepper.moveDegreesCW(120);
+    delay(1000);
+    servo1.write(180);
+    delay(1000);
+    servo1.write(70);
+    delay(1000);
+    stepper.moveDegreesCCW(120);
+    delay(1000);
+  }
+}
